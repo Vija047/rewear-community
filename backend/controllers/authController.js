@@ -6,19 +6,25 @@ const crypto = require('crypto');
 // Register new user
 const register = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, username } = req.body;
+    const { email, password, name, location } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email or username already exists'
+        message: 'User with this email already exists'
       });
     }
+
+    // Split name into first and last name
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Generate username from email
+    const username = email.split('@')[0] + Math.random().toString(36).substr(2, 4);
 
     // Create new user
     const user = new User({
@@ -26,7 +32,8 @@ const register = async (req, res) => {
       password,
       firstName,
       lastName,
-      username
+      username,
+      location
     });
 
     await user.save();
@@ -112,6 +119,36 @@ const login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Login failed',
+      error: error.message
+    });
+  }
+};
+
+// Verify token
+const verifyToken = async (req, res) => {
+  try {
+    // User is already authenticated by the middleware
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      data: {
+        user: user.getPublicProfile()
+      }
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Token verification failed',
       error: error.message
     });
   }
@@ -388,7 +425,7 @@ const logout = async (req, res) => {
     // In a stateless JWT system, logout is handled client-side
     // But we can log the logout event for analytics
     const user = await User.findById(req.user._id);
-    
+
     res.json({
       success: true,
       message: 'Logout successful'
@@ -443,5 +480,6 @@ module.exports = {
   verifyEmail,
   resendVerification,
   logout,
-  getUserById
-}; 
+  getUserById,
+  verifyToken
+};

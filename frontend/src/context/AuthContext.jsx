@@ -1,89 +1,110 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockUsers } from '../data/mockData';
-
-const AuthContext = createContext();
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+import React, { useState, useEffect } from 'react';
+import { AuthContext } from './AuthContextProvider';
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const savedUser = localStorage.getItem('rewear_user');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, []);
+    useEffect(() => {
+        // Check if user is logged in on app start
+        const token = localStorage.getItem('token');
+        if (token) {
+            // Verify token and set user
+            verifyToken(token);
+        } else {
+            setLoading(false);
+        }
+    }, []);
 
-  const login = async (email, password) => {
-    // Simulate API call
-    setLoading(true);
-    
-    // Mock authentication - in real app, this would be an API call
-    const user = mockUsers.find(u => u.email === email);
-    
-    if (user && password === 'password') { // Mock password check
-      setCurrentUser(user);
-      localStorage.setItem('rewear_user', JSON.stringify(user));
-      setLoading(false);
-      return { success: true };
-    } else {
-      setLoading(false);
-      return { success: false, error: 'Invalid email or password' };
-    }
-  };
+    const verifyToken = async (token) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/verify', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-  const register = async (userData) => {
-    setLoading(true);
-    
-    // Simulate API call
-    const newUser = {
-      id: mockUsers.length + 1,
-      ...userData,
-      points: 100, // Starting points
-      joinDate: new Date().toISOString().split('T')[0],
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0c37738de?w=150&h=150&fit=crop&crop=face"
+            if (response.ok) {
+                const userData = await response.json();
+                setCurrentUser(userData.data.user);
+            } else {
+                localStorage.removeItem('token');
+            }
+        } catch (error) {
+            console.error('Token verification failed:', error);
+            localStorage.removeItem('token');
+        }
+        setLoading(false);
     };
-    
-    // In real app, this would be saved to backend
-    setCurrentUser(newUser);
-    localStorage.setItem('rewear_user', JSON.stringify(newUser));
-    setLoading(false);
-    return { success: true };
-  };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('rewear_user');
-  };
+    const register = async (userData) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
 
-  const updateUser = (updatedData) => {
-    const updatedUser = { ...currentUser, ...updatedData };
-    setCurrentUser(updatedUser);
-    localStorage.setItem('rewear_user', JSON.stringify(updatedUser));
-  };
+            const data = await response.json();
 
-  const value = {
-    currentUser,
-    login,
-    register,
-    logout,
-    updateUser,
-    loading
-  };
+            if (response.ok) {
+                localStorage.setItem('token', data.data.token);
+                setCurrentUser(data.data.user);
+                return { success: true, user: data.data.user };
+            } else {
+                return { success: false, error: data.message || 'Registration failed' };
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { success: false, error: 'An error occurred during registration' };
+        }
+    };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}; 
+    const login = async (email, password) => {
+        try {
+            const credentials = typeof email === 'object' ? email : { email, password };
+            const response = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(credentials)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('token', data.data.token);
+                setCurrentUser(data.data.user);
+                return { success: true, user: data.data.user };
+            } else {
+                return { success: false, error: data.message || 'Login failed' };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return { success: false, error: 'An error occurred during login' };
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        setCurrentUser(null);
+    };
+
+    const value = {
+        currentUser,
+        loading,
+        register,
+        login,
+        logout
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {!loading && children}
+        </AuthContext.Provider>
+    );
+};

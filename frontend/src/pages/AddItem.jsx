@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { mockCategories } from '../data/mockData';
-import { 
-  Upload, 
-  X, 
-  Camera, 
-  Package, 
-  Tag, 
+import {
+  Upload,
+  X,
+  Camera,
+  Package,
+  Tag,
   FileText,
   ArrowLeft
 } from 'lucide-react';
+import { itemsAPI } from '../services/api';
 
 const AddItem = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  // Remove unused currentUser variable for now
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -31,6 +30,19 @@ const AddItem = () => {
 
   const conditions = ['Excellent', 'Good', 'Fair'];
   const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+  const categories = [
+    'Tops',
+    'Bottoms',
+    'Dresses',
+    'Outerwear',
+    'Shoes',
+    'Accessories',
+    'Bags',
+    'Activewear',
+    'Formal',
+    'Casual',
+    'Other'
+  ];
 
   const handleChange = (e) => {
     setFormData({
@@ -75,8 +87,8 @@ const AddItem = () => {
   };
 
   const validateForm = () => {
-    if (!formData.title || !formData.description || !formData.category || 
-        !formData.type || !formData.size || !formData.condition) {
+    if (!formData.title || !formData.description || !formData.category ||
+      !formData.type || !formData.size || !formData.condition) {
       setError('Please fill in all required fields');
       return false;
     }
@@ -98,14 +110,31 @@ const AddItem = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // In real app, this would upload images and save item data
+      // Create FormData for file upload
+      const submitData = new FormData();
+
+      // Add form fields
+      Object.keys(formData).forEach(key => {
+        if (key === 'tags') {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else {
+          submitData.append(key, formData[key]);
+        }
+      });
+
+      // Add images
+      images.forEach((image) => {
+        submitData.append('images', image.file);
+      });
+
+      // Call API to create item
+      await itemsAPI.create(submitData);
+
       alert('Item listed successfully!');
       navigate('/dashboard');
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch (error) {
+      setError(error.message || 'An error occurred. Please try again.');
+      console.error('Item creation error:', error);
     } finally {
       setLoading(false);
     }
@@ -204,7 +233,7 @@ const AddItem = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                 >
                   <option value="">Select Category</option>
-                  {mockCategories.map((category) => (
+                  {categories.map((category) => (
                     <option key={category.id} value={category.name}>
                       {category.name}
                     </option>

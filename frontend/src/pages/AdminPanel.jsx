@@ -1,35 +1,116 @@
-import React, { useState } from 'react';
-import { mockUsers, mockItems } from '../data/mockData';
-import { 
-  Users, 
-  Package, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
+import React, { useState, useEffect } from 'react';
+import {
+  Users,
+  Package,
+  CheckCircle,
+  XCircle,
+  Eye,
   MoreVertical,
   Search,
   Filter
 } from 'lucide-react';
 
+
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Mock data for users
+  const mockUsers = [
+    {
+      id: 1,
+      name: 'Alice Johnson',
+      email: 'alice@example.com',
+      location: 'New York, NY',
+      points: 150,
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b1e0?w=50&h=50&fit=crop&crop=face',
+      status: 'active'
+    },
+    {
+      id: 2,
+      name: 'Bob Smith',
+      email: 'bob@example.com',
+      location: 'Los Angeles, CA',
+      points: 230,
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face',
+      status: 'active'
+    },
+    {
+      id: 3,
+      name: 'Carol Davis',
+      email: 'carol@example.com',
+      location: 'Chicago, IL',
+      points: 80,
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face',
+      status: 'blocked'
+    }
+  ];
+
+  // Mock data for items
+  useEffect(() => {
+    const mockItems = [
+      {
+        id: 1,
+        title: 'Vintage Denim Jacket',
+        category: 'Jackets',
+        size: 'M',
+        status: 'Available',
+        images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&h=100&fit=crop'],
+        uploader: { name: 'Alice Johnson' }
+      },
+      {
+        id: 2,
+        title: 'Summer Floral Dress',
+        category: 'Dresses',
+        size: 'S',
+        status: 'Swapped',
+        images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=100&h=100&fit=crop'],
+        uploader: { name: 'Bob Smith' }
+      },
+      {
+        id: 3,
+        title: 'Leather Boots',
+        category: 'Shoes',
+        size: '9',
+        status: 'Available',
+        images: ['https://images.unsplash.com/photo-1544966503-7cc5ac882d5d?w=100&h=100&fit=crop'],
+        uploader: { name: 'Carol Davis' }
+      }
+    ];
+
+    // Simulate loading items
+    setTimeout(() => {
+      setItems(mockItems);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  // Filter users based on search term and status
+  const filteredUsers = mockUsers.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Filter items based on search term and status
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && item.status === 'Available') ||
+      (statusFilter === 'pending' && item.status === 'Pending') ||
+      (statusFilter === 'blocked' && item.status === 'Blocked');
+    return matchesSearch && matchesStatus;
+  });
 
   const tabs = [
     { id: 'users', label: 'Manage Users', icon: Users },
     { id: 'listings', label: 'Manage Listings', icon: Package }
   ];
-
-  const filteredUsers = mockUsers.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredItems = mockItems.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.uploader.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const UserRow = ({ user }) => (
     <div className="flex items-center justify-between p-4 border-b border-gray-200 hover:bg-gray-50">
@@ -77,11 +158,10 @@ const AdminPanel = () => {
         </div>
       </div>
       <div className="flex items-center space-x-2">
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.status === 'Available' 
-            ? 'bg-green-100 text-green-800'
-            : 'bg-gray-100 text-gray-800'
-        }`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === 'Available'
+          ? 'bg-green-100 text-green-800'
+          : 'bg-gray-100 text-gray-800'
+          }`}>
           {item.status}
         </span>
         <div className="flex space-x-1">
@@ -118,11 +198,10 @@ const AdminPanel = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                      activeTab === tab.id
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>
@@ -244,7 +323,7 @@ const AdminPanel = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Listings</p>
-                <p className="text-2xl font-bold text-gray-900">{mockItems.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '...' : items.length}</p>
               </div>
             </div>
           </div>
@@ -278,4 +357,4 @@ const AdminPanel = () => {
   );
 };
 
-export default AdminPanel; 
+export default AdminPanel;

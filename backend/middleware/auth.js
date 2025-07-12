@@ -21,7 +21,7 @@ const verifyToken = (token) => {
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -31,9 +31,9 @@ const authenticate = async (req, res, next) => {
 
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
-    
+
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -62,18 +62,18 @@ const authenticate = async (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       const decoded = verifyToken(token);
-      
+
       const user = await User.findById(decoded.userId).select('-password');
-      
+
       if (user && user.isActive) {
         req.user = user;
       }
     }
-    
+
     next();
   } catch (error) {
     // Continue without authentication
@@ -114,7 +114,7 @@ const requireOwnership = (modelName, paramName = 'id') => {
     try {
       const Model = require(`../models/${modelName}`);
       const resource = await Model.findById(req.params[paramName]);
-      
+
       if (!resource) {
         return res.status(404).json({
           success: false,
@@ -124,7 +124,7 @@ const requireOwnership = (modelName, paramName = 'id') => {
 
       // Check if user owns the resource or is admin
       const resourceUserId = resource.userId || resource.requesterId;
-      
+
       if (resourceUserId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
         return res.status(403).json({
           success: false,
@@ -162,13 +162,13 @@ const createRateLimiter = (windowMs, max, message) => {
 // Specific rate limiters
 const authLimiter = createRateLimiter(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 requests
+  process.env.NODE_ENV === 'development' ? 100 : 5, // More lenient in development
   'Too many authentication attempts. Please try again later.'
 );
 
 const apiLimiter = createRateLimiter(
   15 * 60 * 1000, // 15 minutes
-  100, // 100 requests
+  process.env.NODE_ENV === 'development' ? 1000 : 100, // More lenient in development
   'Too many requests. Please try again later.'
 );
 

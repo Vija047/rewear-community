@@ -2,7 +2,10 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    // Use MongoDB Atlas or local MongoDB
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/rewear';
+
+    const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -28,9 +31,15 @@ const connectDB = async () => {
       console.log('MongoDB connection closed through app termination');
       process.exit(0);
     });
-
   } catch (error) {
     console.error('Database connection failed:', error);
+
+    // For development, continue without database
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️  Continuing without database connection for development');
+      return;
+    }
+
     process.exit(1);
   }
 };

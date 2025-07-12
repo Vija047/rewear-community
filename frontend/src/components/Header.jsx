@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 
 const Header = () => {
@@ -16,15 +16,15 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">R</span>
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+              <span className="text-white font-bold text-lg">R</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">ReWear</span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">ReWear</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -51,7 +51,7 @@ const Header = () => {
                   className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
                 >
                   <img
-                    src={currentUser.avatar}
+                    src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=10b981&color=fff`}
                     alt={currentUser.name}
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -59,10 +59,10 @@ const Header = () => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       to="/dashboard"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <User className="w-4 h-4" />
@@ -70,7 +70,7 @@ const Header = () => {
                     </Link>
                     <Link
                       to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <Settings className="w-4 h-4" />
@@ -78,7 +78,7 @@ const Header = () => {
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      className="flex items-center space-x-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Logout</span>
@@ -90,13 +90,13 @@ const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-green-600 transition-colors"
+                  className="text-gray-700 hover:text-green-600 transition-colors font-medium px-4 py-2 rounded-md hover:bg-green-50"
                 >
-                  Login
+                  Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   Sign Up
                 </Link>
@@ -162,14 +162,14 @@ const Header = () => {
                 <>
                   <Link
                     to="/login"
-                    className="block px-3 py-2 text-gray-700 hover:text-green-600 transition-colors"
+                    className="block px-3 py-2 text-gray-700 hover:text-green-600 transition-colors font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Login
+                    Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="block px-3 py-2 text-gray-700 hover:text-green-600 transition-colors"
+                    className="block px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition-all duration-300 mx-3 mt-2 text-center"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign Up
