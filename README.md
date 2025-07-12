@@ -40,9 +40,9 @@ Develop ReWear, a web-based platform that enables users to exchange unused cloth
 - Lightweight admin panel for oversight
 
 # Team Members' Names:
- - team 01: vijay kumar
- - team 02: prajwal
+ - Team Member 01: vijay kumar
+ - Team Member 02: prajwal
 
 # Team Members' Email Addresses:
- - team 01: vr7797387@gmail.com
- - team 02: Go4prajwal.biradar@gmail.com
+ - Team Email 01: vr7797387@gmail.com
+ - Team Email 02: Go4prajwal.biradar@gmail.com
